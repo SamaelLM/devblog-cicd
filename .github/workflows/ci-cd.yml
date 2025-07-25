@@ -48,12 +48,7 @@ jobs:
         python -m pip install --upgrade pip 
         pip install -r requirements.txt 
      
-    # Paso 5: Ejecutar tests con cobertura 
-    #- name:  Run tests with coverage 
-    #  run: | 
-    #    pytest --cov=app --cov-report=xml --cov-report=term-missing -v 
-
-    # Paso 5: Guardar imagen como artefacto (opcional) 
+     Paso 5: Guardar imagen como artefacto (opcional) 
     - name: Save Docker image 
       run: | 
         docker save devblog:latest | gzip > devblog-image.tar.gz 
@@ -63,9 +58,9 @@ jobs:
       with: 
         name: docker-image 
         path: devblog-image.tar.gz 
-        retention-days: 1 
-
-    # Paso 6: Subir reporte de cobertura (ACTUALIZADO) 
+        retention-days: 1  
+     
+     # Paso 6: Subir reporte de cobertura (ACTUALIZADO) 
     - name:  Upload coverage reports 
       uses: actions/upload-artifact@v4 
       if: always() 
@@ -143,7 +138,7 @@ jobs:
       with: 
         python-version: ${{ env.PYTHON_VERSION }} 
      
-    #Escaneo de vulnerabilidades en dependencias 
+    # Escaneo de vulnerabilidades en dependencias 
     - name: Install security tools 
       run: | 
         pip install safety bandit 
