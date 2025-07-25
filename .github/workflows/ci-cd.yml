@@ -48,7 +48,7 @@ jobs:
         python -m pip install --upgrade pip 
         pip install -r requirements.txt 
      
-     Paso 5: Guardar imagen como artefacto (opcional) 
+    # Paso 5: Guardar imagen como artefacto (opcional) 
     - name: Save Docker image 
       run: | 
         docker save devblog:latest | gzip > devblog-image.tar.gz 
