@@ -52,15 +52,13 @@ jobs:
     - name:  Run tests with coverage 
       run: | 
         pytest --cov=app --cov-report=xml --cov-report=term-missing -v 
-
-     # Paso 6: Subir reporte de cobertura (ACTUALIZADO) 
-    - name:  Upload coverage reports 
-      uses: actions/upload-artifact@v4 
-      if: always() 
+     
+    # Paso 6: Subir reporte de cobertura (opcional) 
+    - name:  Upload coverage to Codecov 
+      uses: codecov/codecov-action@v3 
       with: 
-        name: coverage-report 
-        path: coverage.xml 
-        retention-days: 30  
+        file: ./coverage.xml 
+        fail_ci_if_error: false 
  
   # ================================ 
   # JOB 2: DOCKER BUILD 
@@ -92,7 +90,7 @@ jobs:
         docker run -d -p 5000:5000 --name test-container devblog:latest 
          
         # Esperar que inicie 
-        sleep 15 
+        sleep 10 
          
         # Probar que responde 
         curl -f http://localhost:5000/ || exit 1 
@@ -101,6 +99,18 @@ jobs:
         # Limpiar 
         docker stop test-container 
         docker rm test-container 
+     
+    # Paso 5: Guardar imagen como artefacto (opcional) 
+    - name: Save Docker image 
+      run: | 
+        docker save devblog:latest | gzip > devblog-image.tar.gz 
+     
+    - name:  Upload Docker image artifact 
+      uses: actions/upload-artifact@v3 
+      with: 
+        name: docker-image 
+        path: devblog-image.tar.gz 
+        retention-days: 1 
  
   # ================================ 
   # JOB 3: SECURITY SCAN 
@@ -120,32 +130,22 @@ jobs:
         python-version: ${{ env.PYTHON_VERSION }} 
      
     # Escaneo de vulnerabilidades en dependencias 
-    - name: Install security tools 
+    - name:  Run safety check 
       run: | 
-        pip install safety bandit 
-     
-    - name: Run safety check 
-      run: | 
-        safety check -r requirements.txt --json --output safety-report.json 
-        || true 
-        echo "Safety check completed" 
+        pip install safety 
+        safety check -r requirements.txt 
      
     # Análisis de código estático 
-    - name: Run bandit security linter 
+    - name:  Run bandit security linter 
       run: | 
+        pip install bandit 
         bandit -r app/ -f json -o bandit-report.json || true 
-        echo " Bandit scan completed" 
      
-    # Subir reportes (ACTUALIZADO) 
-    - name:  Upload security reports 
-      uses: actions/upload-artifact@v4 
-      if: always() 
+    - name:  Upload security report 
+      uses: actions/upload-artifact@v3 
       with: 
-        name: security-reports 
-        path: | 
-          safety-report.json 
-          bandit-report.json 
-        retention-days: 30  
+        name: security-report 
+        path: bandit-report.json 
  
   # ================================ 
   # JOB 4: DEPLOY (solo en main) 
